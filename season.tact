@@ -1,23 +1,11 @@
-// Season prototype
 
-// Additional questions:
-// 1. If a user register some token, can we count it as +1 vote for it already?
-// 2. Can a user register more than one tokens in the same season?
-
-// Additional improvements:
-// Add logging everywhere - should help with debugging
-
-// struct Token { ticket: String; }
-
-message Vote { candidate: Address }
-
-// message Note { candidate: Address }
+message Vote { candidate: Address; amount: Int as int32 }
 
 contract Season {
 
- voted: map<Address, Address>;
+ voted: map<Address, Vote>;
  noted: map<Address, Address>;
- votes: map<Address, Int>;
+ votes: map<Address, Int as int32>;
 
  init() {
   self.voted = emptyMap();
@@ -37,11 +25,24 @@ contract Season {
   if (old == null) {
    self.votes.replace(vote.candidate, 0);
   } else {
-   self.votes.replace(vote.candidate, old!! + 1);
+   self.votes.replace(vote.candidate, old!! + vote.amount);
   }
 
  }
 
- // note(note: Note) {}
+ get fun getVotedCoins(limit: Int): map<Address, Int as int32> {
+  return self.votes;
+ }
+ 
+ // TODO: we don't have information about coins here yet
+ get fun getCoinDetails(limit: Int): map<Address, Int> {
+  return emptyMap();
+ }
+
+ get fun getVoteCount(coin: Address): Int {
+  let found = self.votes.get(coin);
+  require(found != null, "This coin is not found!");
+  return self.votes.get(coin)!!;
+ }
 
 }
