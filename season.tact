@@ -1,11 +1,17 @@
+import "@stdlib/deploy";
 
 message Vote { candidate: Address; amount: Int as int32 }
 
-contract Season {
+contract Season with Deployable {
+
+ const DAILY_REWARD: Int = 24*60*60;
 
  voted: map<Address, Vote>;
  noted: map<Address, Address>;
- votes: map<Address, Int as int32>;
+ votes: map<Address, Int as uint32>;
+
+ reward: map<Address, Int as uint32>;
+ balance: map<Address, Int as uint32>;
 
  init() {
   self.voted = emptyMap();
@@ -30,7 +36,25 @@ contract Season {
 
  }
 
- get fun getVotedCoins(limit: Int): map<Address, Int as int32> {
+ receive("daily_reward") {
+
+  let latest = self.reward.get(sender());
+  if (latest == null) {
+   self.reward.replace(sender(), 1);
+  } else {
+    require(now() - latest!! <= self.DAILY_REWARD, "This user has already got a reward!");
+    self.reward.replace(sender(), now());
+    let old = self.balance.get(sender());
+    if (old == null) {
+      self.balance.replace(sender(), 1);
+    } else {
+      self.balance.replace(sender(), old!! + 1);
+    }
+  }
+ }
+
+
+ get fun getVotedCoins(limit: Int): map<Address, Int as uint32> {
   return self.votes;
  }
  
