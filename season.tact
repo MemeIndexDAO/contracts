@@ -27,10 +27,15 @@ contract Season with Deployable {
   let token = self.noted.get(vote.candidate);
   require(token == null, "This token is not registered!");
 
+  let amount = self.balance.get(sender());
+  require(amount == null || amount!! < vote.amount, "Not enough votes!");
+
   let old = self.votes.get(vote.candidate);
   if (old == null) {
-   self.votes.replace(vote.candidate, 0);
+   self.balance.replace(sender(), amount!! - vote.amount);
+   self.votes.replace(vote.candidate, vote.amount);
   } else {
+   self.balance.replace(sender(), amount!! - vote.amount);
    self.votes.replace(vote.candidate, old!! + vote.amount);
   }
 
