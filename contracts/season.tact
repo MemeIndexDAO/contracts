@@ -32,11 +32,11 @@ contract Season with Deployable {
 
   let old = self.votes.get(vote.candidate);
   if (old == null) {
-   self.balance.replace(sender(), amount!! - vote.amount);
-   self.votes.replace(vote.candidate, vote.amount);
+   self.balance.set(sender(), amount!! - vote.amount);
+   self.votes.set(vote.candidate, vote.amount);
   } else {
-   self.balance.replace(sender(), amount!! - vote.amount);
-   self.votes.replace(vote.candidate, old!! + vote.amount);
+   self.balance.set(sender(), amount!! - vote.amount);
+   self.votes.set(vote.candidate, old!! + vote.amount);
   }
 
  }
@@ -45,19 +45,19 @@ contract Season with Deployable {
 
   let latest = self.reward.get(sender());
   if (latest == null) {
-   self.reward.replace(sender(), 1);
+   self.reward.set(sender(), 1);
+   self.balance.set(sender(), 1);
   } else {
-    require(now() - latest!! <= self.DAILY_REWARD, "This user has already got a reward!");
-    self.reward.replace(sender(), now());
+    require(now() - latest!! >= self.DAILY_REWARD, "This user has already got a reward!");
+    self.reward.set(sender(), now());
     let old = self.balance.get(sender());
     if (old == null) {
-      self.balance.replace(sender(), 1);
+      self.balance.set(sender(), 1);
     } else {
-      self.balance.replace(sender(), old!! + 1);
+      self.balance.set(sender(), old!! + 1);
     }
   }
  }
-
 
  get fun getVotedCoins(limit: Int): map<Address, Int as uint32> {
   return self.votes;
@@ -72,6 +72,11 @@ contract Season with Deployable {
   let found = self.votes.get(coin);
   require(found != null, "This coin is not found!");
   return self.votes.get(coin)!!;
+ }
+
+ get fun getUserVotes(user: Address): Int {
+  let balance = self.balance.get(user);
+  if (balance == null) { return 0; } else { return balance!!;}
  }
 
 }
