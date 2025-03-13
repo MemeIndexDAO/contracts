@@ -2,6 +2,8 @@ import "@stdlib/deploy";
 
 message Vote { candidate: Address; amount: Int as int32 }
 
+message Token { candidate: Address }
+
 contract Season with Deployable {
 
  const DAILY_REWARD: Int = 24*60*60;
@@ -39,6 +41,12 @@ contract Season with Deployable {
    self.votes.set(vote.candidate, old!! + vote.amount);
   }
 
+ }
+
+ receive(submission: Token) {
+  let candidate = self.noted.get(submission.candidate);
+  require(candidate == null, "This token was already registered!");
+  self.noted.set(sender(), submission.candidate);
  }
 
  receive("daily_reward") {
